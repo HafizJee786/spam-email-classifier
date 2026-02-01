@@ -21,3 +21,7 @@ if st.button("Predict"):
         st.error("Spam Email 🚫")
     else:
         st.success("Not Spam Email ✅")
+
+
+import nltk
+nltk.download('stopwords')

@@ -1,25 +1,29 @@
 import streamlit as st
 import pickle
 import os
-import nltk
-from nltk.corpus import stopwords
-from transform import transform_text
+import re
 
-# --- NLTK setup (Cloud friendly) ---
-nltk.download('stopwords', quiet=True)
+# Simple transform function without NLTK
+def transform_text(text):
+    text = text.lower()
+    text = re.sub(r'\W', ' ', text)
+    text = text.split()
+    # Optional: remove common English stopwords manually
+    stop_words = set([
+        'the','and','is','in','to','of','for','on','with','a','an','this','that'
+    ])
+    y = [word for word in text if word not in stop_words]
+    return " ".join(y)
 
-# --- Load model and vectorizer from repo root ---
+# Load model + vectorizer
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-model_path = os.path.join(BASE_DIR, "model.pkl")
-vectorizer_path = os.path.join(BASE_DIR, "vectorizer.pkl")
+with open(os.path.join(BASE_DIR, "spam_model.pkl"), "rb") as f:
+    data = pickle.load(f)
 
-with open(model_path, "rb") as f:
-    model = pickle.load(f)
+model = data["model"]
+tfidf = data["tfidf"]
 
-with open(vectorizer_path, "rb") as f:
-    tfidf = pickle.load(f)
-
-# --- Streamlit UI ---
+# Streamlit UI
 st.title("Spam Email Classifier")
 st.write("Enter an email message to check if it's Spam or Not Spam.")
 
@@ -30,7 +34,6 @@ if st.button("Predict"):
         transformed_sms = transform_text(input_sms)
         vector_input = tfidf.transform([transformed_sms])
         prediction = model.predict(vector_input)[0]
-
         if prediction == 'spam':
             st.error("Spam Email 🚫")
         else:
